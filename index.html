@@ -88,7 +88,7 @@
 
     .difficulty-buttons, .hint-buttons {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap; /* ボタンを折り返す */
       gap: 8px;
     }
 
@@ -101,6 +101,7 @@
       cursor: pointer;
       transition: all 0.3s ease;
       box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+      flex: 1 1 45%; /* ボタンの幅を調整 */
     }
 
     .setting-btn:hover {
@@ -136,7 +137,7 @@
 
     .start-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,123,255,0.5);
+      box-shadow: 6px 20px rgba(0,123,255,0.5);
     }
 
     .score-board {
@@ -400,20 +401,27 @@
       .cell { width: 40px; height: 40px; }
       .stone { width: 34px; height: 34px; }
       .score-number { font-size: 1.3em; }
+      .setting-btn { flex: 1 1 100%; } /* スマホではボタンを縦に並べる */
+      .difficulty-buttons { flex-direction: column; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div id="titleScreen">
-      <h1></h1>
+      <h1>オセロゲーム</h1>
       
       <div class="settings-section">
         <label>難易度を選択</label>
         <div class="difficulty-buttons">
-          <button class="setting-btn" data-difficulty="easy">🌟 やさしい</button>
-          <button class="setting-btn selected" data-difficulty="normal">⚡ ふつう</button>
-          <button class="setting-btn" data-difficulty="hard">🔥 むずかしい</button>
+          <button class="setting-btn selected" data-difficulty="level1">👶 レベル1</button>
+          <button class="setting-btn" data-difficulty="level2">🌱 レベル2</button>
+          <button class="setting-btn" data-difficulty="level3">🟢 レベル3</button>
+          <button class="setting-btn" data-difficulty="level4">🟡 レベル4</button>
+          <button class="setting-btn" data-difficulty="level5">🟠 レベル5</button>
+          <button class="setting-btn" data-difficulty="level6">🔴 レベル6</button>
+          <button class="setting-btn" data-difficulty="level7">🟣 レベル7</button>
+          <button class="setting-btn" data-difficulty="level8">👑 レベル8</button>
         </div>
       </div>
 
@@ -435,7 +443,7 @@
           <div class="score-number" id="blackScore">2</div>
         </div>
         <div class="game-status">
-          <div class="difficulty-display" id="difficultyDisplay">ふつう</div>
+          <div class="difficulty-display" id="difficultyDisplay">レベル1</div>
           <div class="turn-display" id="turnDisplay">あなたの番</div>
           <div class="winner-display" id="winnerDisplay"></div>
         </div>
@@ -464,7 +472,7 @@
   <script>
     let board = [];
     let currentPlayer = 'black';
-    let difficulty = 'normal';
+    let difficulty = 'level1';
     let showHints = true;
     let gameOver = false;
     let flippingCells = new Set();
@@ -475,6 +483,18 @@
       [0, -1], [0, 1],
       [1, -1], [1, 0], [1, 1]
     ];
+    
+    // --- AI CONFIGS (難易度設定) ---
+    const AI_CONFIGS = {
+      'level1': { strategy: 'random', depth: 0 },
+      'level2': { strategy: 'max_flips', depth: 0 },
+      'level3': { strategy: 'simple_eval', depth: 0 },
+      'level4': { strategy: 'minimax', depth: 1 }, // 1手先読み
+      'level5': { strategy: 'minimax', depth: 2 }, // 2手先読み
+      'level6': { strategy: 'minimax', depth: 3 }, // 3手先読み
+      'level7': { strategy: 'minimax', depth: 4 }, // 4手先読み
+      'level8': { strategy: 'minimax', depth: 5 }  // 5手先読み (上級者向け)
+    };
 
     document.querySelectorAll('.difficulty-buttons .setting-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -509,7 +529,10 @@
       document.getElementById('gameScreen').classList.remove('hidden');
       document.getElementById('noMovesOverlay').style.display = 'none';
       
-      const diffNames = { easy: 'やさしい', normal: 'ふつう', hard: 'むずかしい' };
+      const diffNames = {};
+      for(let i = 1; i <= 8; i++) {
+        diffNames['level' + i] = 'レベル' + i;
+      }
       document.getElementById('difficultyDisplay').textContent = diffNames[difficulty];
       
       initBoard();
@@ -657,7 +680,9 @@
       }, 400);
     }
 
+    // --- AI Move Logic ---
     function makeAIMove() {
+      const config = AI_CONFIGS[difficulty];
       const moves = [];
       for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
@@ -681,28 +706,160 @@
       }
 
       let bestMove;
-      if (difficulty === 'easy') {
+
+      if (config.strategy === 'random') {
+        // レベル1: 完全ランダム
         bestMove = moves[Math.floor(Math.random() * moves.length)];
-      } else if (difficulty === 'normal') {
+      } else if (config.strategy === 'max_flips') {
+        // レベル2: 獲得数優先
         bestMove = moves.reduce((best, move) => 
-          move.flips.length > best.flips.length ? move : best
-        );
-      } else {
+          move.flips.length > (best.flips ? best.flips.length : -1) ? move : best
+        , moves[0]);
+      } else if (config.strategy === 'simple_eval') {
+        // レベル3: 単純な盤面評価
         bestMove = moves.reduce((best, move) => {
-          const testBoard = board.map(row => [...row]);
-          testBoard[move.row][move.col] = 'white';
-          move.flips.forEach(pos => {
-            testBoard[pos[0]][pos[1]] = 'white';
-          });
+          const testBoard = applyMoveToBoard(board, move.row, move.col, move.flips, 'white');
           const score = evaluateBoard(testBoard);
           return score > (best.score || -Infinity) ? { ...move, score } : best;
         }, {});
+      } else if (config.strategy === 'minimax') {
+        // レベル4〜8: ミニマックス探索
+        let maxScore = -Infinity;
+        bestMove = moves[0];
+        
+        for (const move of moves) {
+          const newBoard = applyMoveToBoard(board, move.row, move.col, move.flips, 'white');
+          // 探索深さ(depth - 1)でミニマックスを実行。AI(白)のスコアを最大化
+          const score = minimax(newBoard, config.depth - 1, false); 
+          
+          if (score > maxScore) {
+            maxScore = score;
+            bestMove = move;
+          }
+        }
       }
 
       makeMove(bestMove.row, bestMove.col, bestMove.flips, 'white');
     }
 
+    // --- AI Auxiliary Functions ---
+
+    // 盤面をコピーし、一手打った後の新しい盤面を返す
+    function applyMoveToBoard(currentBoard, row, col, flips, player) {
+      const newBoard = currentBoard.map(r => [...r]);
+      newBoard[row][col] = player;
+      flips.forEach(pos => {
+        newBoard[pos[0]][pos[1]] = player;
+      });
+      return newBoard;
+    }
+
+    // ミニマックス用: board変数ではなく、引数で渡された盤面 (testBoard) を評価するための isValidMove
+    function isValidMoveAtDepth(testBoard, row, col, player) {
+      if (testBoard[row][col] !== null) return [];
+      
+      const opponent = player === 'black' ? 'white' : 'black';
+      const toFlip = [];
+
+      for (const dir of directions) {
+        const dx = dir[0];
+        const dy = dir[1];
+        const path = [];
+        let x = row + dx;
+        let y = col + dy;
+
+        while (x >= 0 && x < 8 && y >= 0 && y < 8 && testBoard[x][y] === opponent) {
+          path.push([x, y]);
+          x += dx;
+          y += dy;
+        }
+
+        if (path.length > 0 && x >= 0 && x < 8 && y >= 0 && y < 8 && testBoard[x][y] === player) {
+          toFlip.push(...path);
+        }
+      }
+
+      return toFlip;
+    }
+
+    // ミニマックスアルゴリズムの実装
+    function minimax(currentBoard, depth, isMaximizingPlayer) {
+      const player = isMaximizingPlayer ? 'white' : 'black';
+      const opponent = isMaximizingPlayer ? 'black' : 'white';
+
+      if (depth === 0) {
+        // 終端に達したら盤面を評価して返す
+        return evaluateBoard(currentBoard);
+      }
+      
+      const moves = [];
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+          const toFlip = isValidMoveAtDepth(currentBoard, i, j, player);
+          if (toFlip.length > 0) {
+            moves.push({ row: i, col: j, flips: toFlip });
+          }
+        }
+      }
+
+      if (moves.length === 0) {
+        // パスの場合、相手プレイヤーの番として再帰 (ゲーム終了チェックは簡略化)
+        // 厳密には相手も打てないかチェックすべきだが、探索効率のため一旦スキップ
+        // 相手も打てない場合はゲーム終了として高評価/低評価を返す
+        const opponentMovesExist = calculateValidMovesAtDepth(currentBoard, opponent).length > 0;
+        
+        if (!opponentMovesExist) {
+            // 両者パスでゲーム終了。石の差を大きく評価
+            let black = 0; let white = 0;
+            for(let i=0; i<8; i++) { for(let j=0; j<8; j++) { 
+                if (currentBoard[i][j] === 'black') black++;
+                if (currentBoard[i][j] === 'white') white++;
+            }}
+            // AI(白)のスコア = 白石の数 - 黒石の数
+            return (white - black) * 10000; 
+        }
+
+        // パスして相手にターンを渡す
+        return minimax(currentBoard, depth, !isMaximizingPlayer);
+      }
+
+      if (isMaximizingPlayer) {
+        // AI(白)の番: スコアを最大化
+        let maxScore = -Infinity;
+        for (const move of moves) {
+          const newBoard = applyMoveToBoard(currentBoard, move.row, move.col, move.flips, player);
+          const score = minimax(newBoard, depth - 1, false);
+          maxScore = Math.max(maxScore, score);
+        }
+        return maxScore;
+      } else {
+        // プレイヤー(黒)の番: スコアを最小化
+        let minScore = Infinity;
+        for (const move of moves) {
+          const newBoard = applyMoveToBoard(currentBoard, move.row, move.col, move.flips, player);
+          const score = minimax(newBoard, depth - 1, true);
+          minScore = Math.min(minScore, score);
+        }
+        return minScore;
+      }
+    }
+
+    // ミニマックス用: 特定の盤面における有効な手のリストを取得
+    function calculateValidMovesAtDepth(testBoard, player) {
+        const moves = [];
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                if (testBoard[i][j] === null && isValidMoveAtDepth(testBoard, i, j, player).length > 0) {
+                    moves.push([i, j]);
+                }
+            }
+        }
+        return moves;
+    }
+
+
     function evaluateBoard(testBoard) {
+      // 盤面の角や辺に重み付けをする
       const weights = [
         [100, -20, 10, 5, 5, 10, -20, 100],
         [-20, -50, -2, -2, -2, -2, -50, -20],
@@ -717,6 +874,7 @@
       let score = 0;
       for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
+          // AI(白)を最大化プレイヤーとしてスコアを計算
           if (testBoard[i][j] === 'white') score += weights[i][j];
           if (testBoard[i][j] === 'black') score -= weights[i][j];
         }
@@ -747,6 +905,7 @@
       renderBoard();
     }
 
+    // --- End Game Logic (勝利メッセージ追加) ---
     function endGame() {
       gameOver = true;
       const black = parseInt(document.getElementById('blackScore').textContent);
@@ -758,9 +917,10 @@
       
       const winnerEl = document.getElementById('winnerDisplay');
       if (black > white) {
-        winnerEl.textContent = '🎉 黒の勝ち！';
+        // プレイヤー(黒)が勝利した場合のメッセージ
+        winnerEl.textContent = '🎉 おめでとうございます！あなたの勝ちです！';
       } else if (white > black) {
-        winnerEl.textContent = '💫 白の勝ち！';
+        winnerEl.textContent = '💫 CPUの勝ちです！';
       } else {
         winnerEl.textContent = '🤝 引き分け！';
       }
