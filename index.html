@@ -336,39 +336,6 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-    
-    /* ★追加/修正: 置くところなしオーバーレイのスタイル */
-    #noMovesOverlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.6); /* 半透明の黒背景 */
-        z-index: 1000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .no-moves-message {
-        background: rgba(255, 255, 255, 0.95); /* 半透明の白背景 */
-        padding: 40px 60px;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        text-align: center;
-        font-size: 1.8em;
-        font-weight: bold;
-        color: #d9534f; /* 赤系の文字色 */
-        line-height: 1.4;
-        cursor: pointer; /* クリックできることを示す */
-        animation: popUp 0.3s ease-out;
-    }
-    
-    @keyframes popUp {
-        0% { transform: scale(0.8); opacity: 0; }
-        100% { transform: scale(1); opacity: 1; }
-    }
 
 
     @media (max-width: 600px) {
@@ -443,7 +410,7 @@
     </div>
   </div>
 
-  <div id="noMovesOverlay" class="hidden">
+  <div id="noMovesOverlay" class="no-moves-overlay hidden">
     <div class="no-moves-message">
       置くところが<br>ありません！
     </div>
@@ -465,6 +432,11 @@
     let flippingCells = new Set();
     let validMoves = [];
 
+    // ★追加: 思考時間管理用のグローバル変数
+    let searchStartTime;
+    const TIME_LIMIT_MS = 3000; // 3秒に設定
+    let stopSearch = false; 
+
     const transpositionTable = new Map();
     const MAX_CACHE_SIZE = 100000;
 
@@ -483,10 +455,10 @@
       'level6': { name: '🔴 レベル6', strategy: 'minimax', depth: 3 },
       'level7': { name: '🟣 レベル7', strategy: 'minimax', depth: 4 }, 
       'level8': { name: '👑 レベル8', strategy: 'minimax', depth: 6 }, 
-      'level9': { name: '⭐ レベル9 (Depth 6/境界石)', strategy: 'minimax', depth: 6 }, 
-      'level10': { name: '🔥 レベル10 (Depth 7/境界石強化)', strategy: 'minimax', depth: 7 }, 
-      'level11': { name: '⚔️ レベル11 (Depth 7/危険マス回避)', strategy: 'minimax', depth: 7 }, 
-      'level12': { name: '🔮 レベル12 (Depth 8/究極戦略)', strategy: 'minimax', depth: 8 } 
+      'level9': { name: '⭐ レベル9', strategy: 'minimax', depth: 6 }, 
+      'level10': { name: '🔥 レベル10', strategy: 'minimax', depth: 7 }, 
+      'level11': { name: '⚔️ レベル11', strategy: 'minimax', depth: 7 }, 
+      'level12': { name: '🔮 レベル12', strategy: 'minimax', depth: 8 } 
     };
     
     document.getElementById('difficultySelect').addEventListener('change', (e) => {
@@ -501,7 +473,6 @@
       });
     });
 
-    // ★修正: オーバーレイのクリックイベント
     document.getElementById('noMovesOverlay').addEventListener('click', function() {
       this.classList.add('hidden');
     });
@@ -627,14 +598,8 @@
       makeMove(row, col, toFlip, 'black');
     }
 
-    // ★修正: メッセージ表示処理
     function showNoMovesMessage() {
-      const noMovesOverlayEl = document.getElementById('noMovesOverlay');
-      noMovesOverlayEl.classList.remove('hidden');
-      // 1.5秒後に自動的に非表示にする（ユーザーがクリックしなかった場合）
-      setTimeout(() => {
-          noMovesOverlayEl.classList.add('hidden');
-      }, 1500); 
+      document.getElementById('noMovesOverlay').classList.remove('hidden');
     }
 
     function makeMove(row, col, toFlip, player) {
@@ -666,7 +631,6 @@
             currentPlayer = player;
             updateTurnDisplay();
             if (currentPlayer === 'white') {
-              // パス後のCPUのターンを少し待って実行
               setTimeout(() => makeAIMoveAsync(), 1500);
             }
           }
@@ -711,6 +675,7 @@
         }, 10); 
     }
 
+    // ★修正: makeAIMoveに反復深化と時間制限を導入
     function makeAIMove() {
       const config = AI_CONFIGS[difficulty];
       const moves = [];
@@ -725,27 +690,7 @@
 
       if (moves.length === 0) return null;
 
-      let bestMove;
-      let actualDepth = config.depth; // レベル12で8
-
-      // ★新規ロジック: 空きマスをカウント
-      let emptyCells = 0;
-      for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 8; j++) {
-          if (board[i][j] === null) {
-            emptyCells++;
-          }
-        }
-      }
-
-      // ★新規ロジック: レベル12かつ中盤（空きマス20超）なら深さを一つ減らす
-      if (difficulty === 'level12' && emptyCells > 20) {
-          actualDepth = 7; // 8 ply -> 7 ply search total
-          console.log(`Level 12: Mid-game detected (Empty: ${emptyCells}). Reducing depth to ${actualDepth} (7 ply).`);
-      } else if (difficulty === 'level12' && emptyCells <= 20) {
-          console.log(`Level 12: End-game detected (Empty: ${emptyCells}). Maintaining depth ${actualDepth} (8 ply).`);
-      }
-
+      let bestMove = moves[0];
 
       if (config.strategy === 'random') {
         bestMove = moves[Math.floor(Math.random() * moves.length)];
@@ -760,25 +705,64 @@
           return score > (best.score || -Infinity) ? { ...move, score } : best;
         }, {});
       } else if (config.strategy === 'minimax') {
-        let maxScore = -Infinity;
-        bestMove = moves[0];
+        
+        let emptyCells = 0;
+        for (let i = 0; i < 8; i++) {
+          for (let j = 0; j < 8; j++) {
+            if (board[i][j] === null) {
+              emptyCells++;
+            }
+          }
+        }
 
+        // ターゲット深度を動的に設定
+        let targetDepth = config.depth; 
+        if (difficulty === 'level12' && emptyCells > 20) {
+            targetDepth = 7; 
+        }
+
+        searchStartTime = Date.now();
+        stopSearch = false;
+        let finalBestMove = bestMove;
+        let finalMaxScore = -Infinity;
+
+        // 手の事前ソート (クイック評価) は最初に一度だけ実行
         moves.forEach(move => {
             const newBoard = applyMoveToBoard(board, move.row, move.col, move.flips, 'white');
             move.quickEval = evaluateBoardQuick(newBoard); 
         });
         moves.sort((a, b) => b.quickEval - a.quickEval);
-        
-        for (const move of moves) {
-          const newBoard = applyMoveToBoard(board, move.row, move.col, move.flips, 'white');
-          // ★修正: actualDepth を使用
-          const score = minimax(newBoard, actualDepth - 1, false, -Infinity, Infinity); 
-          
-          if (score > maxScore) {
-            maxScore = score;
-            bestMove = move;
-          }
+
+        // 反復深化探索ループ
+        for (let depth = 1; depth <= targetDepth; depth++) {
+            if (stopSearch) break; 
+
+            let currentMaxScore = -Infinity;
+            let currentBestMove = null;
+            
+            for (const move of moves) {
+                if (stopSearch) break; // 時間切れチェック
+                
+                const newBoard = applyMoveToBoard(board, move.row, move.col, move.flips, 'white');
+                // 探索深さを current depth - 1 で呼び出し
+                const score = minimax(newBoard, depth - 1, false, -Infinity, Infinity); 
+
+                if (score > currentMaxScore) {
+                    currentMaxScore = score;
+                    currentBestMove = move;
+                }
+            }
+
+            if (!stopSearch && currentBestMove) {
+                // その深度の探索を時間内に完了した場合、最善手を更新
+                finalMaxScore = currentMaxScore;
+                finalBestMove = currentBestMove;
+            } else if (stopSearch) {
+                // 時間切れの場合、直前の深度の結果を保持してループを終了
+                break;
+            }
         }
+        return finalBestMove;
       }
       return bestMove;
     }
@@ -812,8 +796,14 @@
         return score; 
     }
 
-
+    // ★修正: minimax関数に時間切れチェックを追加
     function minimax(currentBoard, depth, isMaximizingPlayer, alpha = -Infinity, beta = Infinity) {
+      
+      if (Date.now() - searchStartTime > TIME_LIMIT_MS) {
+          stopSearch = true;
+          return isMaximizingPlayer ? alpha : beta; // 時間切れの場合は直ちに探索を打ち切る
+      }
+      
       const player = isMaximizingPlayer ? 'white' : 'black';
       const opponent = isMaximizingPlayer ? 'black' : 'white';
 
@@ -866,6 +856,9 @@
         for (const move of moves) {
           const newBoard = applyMoveToBoard(currentBoard, move.row, move.col, move.flips, player);
           const score = minimax(newBoard, depth - 1, false, alpha, beta);
+          
+          if (stopSearch) return maxScore; // 打ち切り後の戻り値処理
+
           maxScore = Math.max(maxScore, score);
           
           alpha = Math.max(alpha, maxScore);
@@ -882,6 +875,9 @@
         for (const move of moves) {
           const newBoard = applyMoveToBoard(currentBoard, move.row, move.col, move.flips, player);
           const score = minimax(newBoard, depth - 1, true, alpha, beta);
+          
+          if (stopSearch) return minScore; // 打ち切り後の戻り値処理
+
           minScore = Math.min(minScore, score);
           
           beta = Math.min(beta, minScore);
