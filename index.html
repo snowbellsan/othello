@@ -336,6 +336,39 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+    
+    /* ★追加/修正: 置くところなしオーバーレイのスタイル */
+    #noMovesOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6); /* 半透明の黒背景 */
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .no-moves-message {
+        background: rgba(255, 255, 255, 0.95); /* 半透明の白背景 */
+        padding: 40px 60px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        text-align: center;
+        font-size: 1.8em;
+        font-weight: bold;
+        color: #d9534f; /* 赤系の文字色 */
+        line-height: 1.4;
+        cursor: pointer; /* クリックできることを示す */
+        animation: popUp 0.3s ease-out;
+    }
+    
+    @keyframes popUp {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
 
 
     @media (max-width: 600px) {
@@ -410,7 +443,7 @@
     </div>
   </div>
 
-  <div id="noMovesOverlay" class="no-moves-overlay hidden">
+  <div id="noMovesOverlay" class="hidden">
     <div class="no-moves-message">
       置くところが<br>ありません！
     </div>
@@ -450,10 +483,10 @@
       'level6': { name: '🔴 レベル6', strategy: 'minimax', depth: 3 },
       'level7': { name: '🟣 レベル7', strategy: 'minimax', depth: 4 }, 
       'level8': { name: '👑 レベル8', strategy: 'minimax', depth: 6 }, 
-      'level9': { name: '⭐ レベル9', strategy: 'minimax', depth: 6 }, 
-      'level10': { name: '🔥 レベル10', strategy: 'minimax', depth: 7 }, 
-      'level11': { name: '⚔️ レベル11', strategy: 'minimax', depth: 7 }, 
-      'level12': { name: '🔮 レベル12', strategy: 'minimax', depth: 8 } 
+      'level9': { name: '⭐ レベル9 (Depth 6/境界石)', strategy: 'minimax', depth: 6 }, 
+      'level10': { name: '🔥 レベル10 (Depth 7/境界石強化)', strategy: 'minimax', depth: 7 }, 
+      'level11': { name: '⚔️ レベル11 (Depth 7/危険マス回避)', strategy: 'minimax', depth: 7 }, 
+      'level12': { name: '🔮 レベル12 (Depth 8/究極戦略)', strategy: 'minimax', depth: 8 } 
     };
     
     document.getElementById('difficultySelect').addEventListener('change', (e) => {
@@ -468,6 +501,7 @@
       });
     });
 
+    // ★修正: オーバーレイのクリックイベント
     document.getElementById('noMovesOverlay').addEventListener('click', function() {
       this.classList.add('hidden');
     });
@@ -593,8 +627,14 @@
       makeMove(row, col, toFlip, 'black');
     }
 
+    // ★修正: メッセージ表示処理
     function showNoMovesMessage() {
-      document.getElementById('noMovesOverlay').classList.remove('hidden');
+      const noMovesOverlayEl = document.getElementById('noMovesOverlay');
+      noMovesOverlayEl.classList.remove('hidden');
+      // 1.5秒後に自動的に非表示にする（ユーザーがクリックしなかった場合）
+      setTimeout(() => {
+          noMovesOverlayEl.classList.add('hidden');
+      }, 1500); 
     }
 
     function makeMove(row, col, toFlip, player) {
@@ -626,6 +666,7 @@
             currentPlayer = player;
             updateTurnDisplay();
             if (currentPlayer === 'white') {
+              // パス後のCPUのターンを少し待って実行
               setTimeout(() => makeAIMoveAsync(), 1500);
             }
           }
