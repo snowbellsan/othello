@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>オセロゲーム</title>
   <style>
+    /* CSS部分は変更ありません */
     * {
       margin: 0;
       padding: 0;
@@ -85,10 +86,27 @@
       margin-bottom: 10px;
       color: #333;
     }
+    
+    /* ドロップダウンのスタイル */
+    #difficultySelect {
+        width: 100%;
+        padding: 10px;
+        font-size: 1em;
+        border-radius: 8px;
+        border: 2px solid #28a745;
+        background-color: #f0fff0;
+        cursor: pointer;
+        appearance: none; 
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2328a745"><path d="M7 10l5 5 5-5z"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 10px top 50%;
+        background-size: 20px;
+    }
 
-    .difficulty-buttons, .hint-buttons {
+
+    .hint-buttons {
       display: flex;
-      flex-wrap: wrap; /* ボタンを折り返す */
+      flex-wrap: wrap; 
       gap: 8px;
     }
 
@@ -101,7 +119,7 @@
       cursor: pointer;
       transition: all 0.3s ease;
       box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-      flex: 1 1 45%; /* ボタンの幅を調整 */
+      flex: 1 1 45%; 
     }
 
     .setting-btn:hover {
@@ -174,17 +192,6 @@
       border: 2px solid #999;
     }
 
-    .stone-display::after {
-      content: '';
-      position: absolute;
-      top: 15%;
-      left: 20%;
-      width: 40%;
-      height: 40%;
-      background: radial-gradient(circle, rgba(255,255,255,0.6), transparent);
-      border-radius: 50%;
-    }
-
     .score-number {
       font-size: 1.5em;
       font-weight: bold;
@@ -207,6 +214,7 @@
       font-size: 1.1em;
       font-weight: bold;
       color: #1e7e34;
+      min-height: 1.5em; 
     }
 
     .game-over {
@@ -247,15 +255,6 @@
       background: linear-gradient(135deg, #3a8f4f, #2ea04d);
     }
 
-    .cell::after {
-      content: '';
-      position: absolute;
-      inset: 2px;
-      border: 1px solid rgba(0,0,0,0.2);
-      border-radius: 3px;
-      pointer-events: none;
-    }
-
     .stone {
       width: 42px;
       height: 42px;
@@ -265,12 +264,6 @@
       animation: placeStone 0.3s ease-out;
     }
 
-    @keyframes placeStone {
-      0% { transform: scale(0); }
-      50% { transform: scale(1.2); }
-      100% { transform: scale(1); }
-    }
-
     .stone.black {
       background: radial-gradient(circle at 35% 35%, #4a4a4a, #000);
     }
@@ -278,17 +271,6 @@
     .stone.white {
       background: radial-gradient(circle at 35% 35%, #fff, #ddd);
       border: 2px solid #999;
-    }
-
-    .stone::after {
-      content: '';
-      position: absolute;
-      top: 20%;
-      left: 25%;
-      width: 40%;
-      height: 40%;
-      background: radial-gradient(circle, rgba(255,255,255,0.7), transparent);
-      border-radius: 50%;
     }
 
     .stone.flipping {
@@ -309,100 +291,61 @@
       animation: pulse 1.5s ease-in-out infinite;
       box-shadow: 0 0 8px rgba(76,175,80,0.6);
     }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 0.7; }
-      50% { transform: scale(1.3); opacity: 1; }
-    }
-
-    .back-btn {
-      width: 100%;
-      padding: 12px;
-      margin-top: 15px;
-      font-size: 1em;
-      font-weight: bold;
-      background: linear-gradient(135deg, #6c757d, #495057);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 3px 12px rgba(108,117,125,0.4);
-    }
-
-    .back-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(108,117,125,0.5);
-    }
-
+    
     .hidden {
       display: none !important;
     }
 
-    .center {
-      text-align: center;
+    /* --- 思考中オーバーレイ --- */
+    #thinkingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6); 
+        z-index: 1000; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
-    .winner-display {
-      font-size: 0.95em;
-      margin-top: 3px;
-      color: #7b1fa2;
-      font-weight: bold;
+    .thinking-message-box {
+        background: white;
+        padding: 30px 50px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        text-align: center;
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #333;
     }
 
-    .no-moves-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      animation: fadeIn 0.3s ease-out;
+    /* ローディングスピナー */
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #28a745;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 10px auto 0;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 
-    .no-moves-message {
-      background: white;
-      padding: 30px 40px;
-      border-radius: 20px;
-      font-size: 1.5em;
-      font-weight: bold;
-      color: #d32f2f;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-      animation: scaleIn 0.3s ease-out;
-      text-align: center;
-    }
-
-    @keyframes scaleIn {
-      from { transform: scale(0.8); }
-      to { transform: scale(1); }
-    }
 
     @media (max-width: 600px) {
-      .container { padding: 5px; }
-      #titleScreen, #gameScreen { padding: 15px; border-radius: 15px; }
-      h1 { font-size: 2em; margin-bottom: 15px; }
       .cell { width: 45px; height: 45px; }
       .stone { width: 38px; height: 38px; }
-      .board-container { padding: 8px; }
-      .no-moves-message { padding: 25px 30px; font-size: 1.3em; }
     }
 
     @media (max-width: 400px) {
-      h1 { font-size: 1.8em; }
       .cell { width: 40px; height: 40px; }
       .stone { width: 34px; height: 34px; }
-      .score-number { font-size: 1.3em; }
-      .setting-btn { flex: 1 1 100%; } /* スマホではボタンを縦に並べる */
-      .difficulty-buttons { flex-direction: column; }
     }
   </style>
 </head>
@@ -412,17 +355,21 @@
       <h1>オセロゲーム</h1>
       
       <div class="settings-section">
-        <label>難易度を選択</label>
-        <div class="difficulty-buttons">
-          <button class="setting-btn selected" data-difficulty="level1">👶 レベル1</button>
-          <button class="setting-btn" data-difficulty="level2">🌱 レベル2</button>
-          <button class="setting-btn" data-difficulty="level3">🟢 レベル3</button>
-          <button class="setting-btn" data-difficulty="level4">🟡 レベル4</button>
-          <button class="setting-btn" data-difficulty="level5">🟠 レベル5</button>
-          <button class="setting-btn" data-difficulty="level6">🔴 レベル6</button>
-          <button class="setting-btn" data-difficulty="level7">🟣 レベル7</button>
-          <button class="setting-btn" data-difficulty="level8">👑 レベル8</button>
-        </div>
+        <label for="difficultySelect">難易度を選択 (レベル1〜12)</label>
+        <select id="difficultySelect">
+          <option value="level1">👶 レベル1 (ランダム)</option>
+          <option value="level2">🌱 レベル2 (獲得数優先)</option>
+          <option value="level3">🟢 レベル3 (単純評価)</option>
+          <option value="level4">🟡 レベル4 (Depth 1)</option>
+          <option value="level5">🟠 レベル5 (Depth 2)</option>
+          <option value="level6">🔴 レベル6 (Depth 3)</option>
+          <option value="level7">🟣 レベル7 (Depth 4)</option>
+          <option value="level8" selected>👑 レベル8 (Depth 6/L8ベース)</option>
+          <option value="level9">⭐ レベル9 (Depth 6/境界石)</option>
+          <option value="level10">🔥 レベル10 (Depth 7/境界石強化)</option>
+          <option value="level11">⚔️ レベル11 (Depth 7/危険マス回避)</option>
+          <option value="level12">🔮 レベル12 (Depth 8/究極戦略)</option>
+        </select>
       </div>
 
       <div class="settings-section">
@@ -443,7 +390,7 @@
           <div class="score-number" id="blackScore">2</div>
         </div>
         <div class="game-status">
-          <div class="difficulty-display" id="difficultyDisplay">レベル1</div>
+          <div class="difficulty-display" id="difficultyDisplay"></div>
           <div class="turn-display" id="turnDisplay">あなたの番</div>
           <div class="winner-display" id="winnerDisplay"></div>
         </div>
@@ -463,20 +410,30 @@
     </div>
   </div>
 
-  <div id="noMovesOverlay" class="no-moves-overlay">
+  <div id="noMovesOverlay" class="no-moves-overlay hidden">
     <div class="no-moves-message">
       置くところが<br>ありません！
+    </div>
+  </div>
+
+  <div id="thinkingOverlay" class="hidden">
+    <div class="thinking-message-box">
+        <p>CPUが次の手を考えています...</p>
+        <div class="spinner"></div>
     </div>
   </div>
 
   <script>
     let board = [];
     let currentPlayer = 'black';
-    let difficulty = 'level1';
+    let difficulty = 'level8';
     let showHints = true;
     let gameOver = false;
     let flippingCells = new Set();
     let validMoves = [];
+
+    const transpositionTable = new Map();
+    const MAX_CACHE_SIZE = 100000;
 
     const directions = [
       [-1, -1], [-1, 0], [-1, 1],
@@ -484,24 +441,23 @@
       [1, -1], [1, 0], [1, 1]
     ];
     
-    // --- AI CONFIGS (難易度設定) ---
     const AI_CONFIGS = {
-      'level1': { strategy: 'random', depth: 0 },
-      'level2': { strategy: 'max_flips', depth: 0 },
-      'level3': { strategy: 'simple_eval', depth: 0 },
-      'level4': { strategy: 'minimax', depth: 1 }, // 1手先読み
-      'level5': { strategy: 'minimax', depth: 2 }, // 2手先読み
-      'level6': { strategy: 'minimax', depth: 3 }, // 3手先読み
-      'level7': { strategy: 'minimax', depth: 4 }, // 4手先読み
-      'level8': { strategy: 'minimax', depth: 5 }  // 5手先読み (上級者向け)
+      'level1': { name: '👶 レベル1', strategy: 'random', depth: 0 },
+      'level2': { name: '🌱 レベル2', strategy: 'max_flips', depth: 0 },
+      'level3': { name: '🟢 レベル3', strategy: 'simple_eval', depth: 0 },
+      'level4': { name: '🟡 レベル4', strategy: 'minimax', depth: 1 },
+      'level5': { name: '🟠 レベル5', strategy: 'minimax', depth: 2 },
+      'level6': { name: '🔴 レベル6', strategy: 'minimax', depth: 3 },
+      'level7': { name: '🟣 レベル7', strategy: 'minimax', depth: 4 }, 
+      'level8': { name: '👑 レベル8', strategy: 'minimax', depth: 6 }, 
+      'level9': { name: '⭐ レベル9', strategy: 'minimax', depth: 6 }, 
+      'level10': { name: '🔥 レベル10', strategy: 'minimax', depth: 7 }, 
+      'level11': { name: '⚔️ レベル11', strategy: 'minimax', depth: 7 }, 
+      'level12': { name: '🔮 レベル12', strategy: 'minimax', depth: 8 } 
     };
-
-    document.querySelectorAll('.difficulty-buttons .setting-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.difficulty-buttons .setting-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        difficulty = btn.dataset.difficulty;
-      });
+    
+    document.getElementById('difficultySelect').addEventListener('change', (e) => {
+        difficulty = e.target.value;
     });
 
     document.querySelectorAll('.hint-buttons .setting-btn').forEach(btn => {
@@ -513,7 +469,7 @@
     });
 
     document.getElementById('noMovesOverlay').addEventListener('click', function() {
-      this.style.display = 'none';
+      this.classList.add('hidden');
     });
 
     function initBoard() {
@@ -525,15 +481,16 @@
     }
 
     function startGame() {
+      difficulty = document.getElementById('difficultySelect').value;
+
       document.getElementById('titleScreen').classList.add('hidden');
       document.getElementById('gameScreen').classList.remove('hidden');
-      document.getElementById('noMovesOverlay').style.display = 'none';
+      document.getElementById('noMovesOverlay').classList.add('hidden');
+      document.getElementById('thinkingOverlay').classList.add('hidden');
       
-      const diffNames = {};
-      for(let i = 1; i <= 8; i++) {
-        diffNames['level' + i] = 'レベル' + i;
-      }
-      document.getElementById('difficultyDisplay').textContent = diffNames[difficulty];
+      transpositionTable.clear(); 
+      
+      document.getElementById('difficultyDisplay').textContent = AI_CONFIGS[difficulty].name;
       
       initBoard();
       currentPlayer = 'black';
@@ -544,12 +501,14 @@
       renderBoard();
       calculateValidMoves('black');
       updateScores();
+      updateTurnDisplay();
     }
 
     function backToTitle() {
       document.getElementById('gameScreen').classList.add('hidden');
       document.getElementById('titleScreen').classList.remove('hidden');
-      document.getElementById('noMovesOverlay').style.display = 'none';
+      document.getElementById('noMovesOverlay').classList.add('hidden');
+      document.getElementById('thinkingOverlay').classList.add('hidden');
     }
 
     function renderBoard() {
@@ -635,7 +594,7 @@
     }
 
     function showNoMovesMessage() {
-      document.getElementById('noMovesOverlay').style.display = 'flex';
+      document.getElementById('noMovesOverlay').classList.remove('hidden');
     }
 
     function makeMove(row, col, toFlip, player) {
@@ -663,10 +622,11 @@
           if (backMoves.length === 0) {
             endGame();
           } else {
+            // パスして自分に戻る
             currentPlayer = player;
             updateTurnDisplay();
             if (currentPlayer === 'white') {
-              setTimeout(makeAIMove, 1500);
+              setTimeout(() => makeAIMoveAsync(), 1500);
             }
           }
         } else {
@@ -674,13 +634,42 @@
           updateTurnDisplay();
           
           if (currentPlayer === 'white') {
-            setTimeout(makeAIMove, 500);
+            setTimeout(() => makeAIMoveAsync(), 500);
           }
         }
       }, 400);
     }
 
-    // --- AI Move Logic ---
+    // --- AI Move Logic (非同期処理とオーバーレイ制御) ---
+    function makeAIMoveAsync() {
+        const turnEl = document.getElementById('turnDisplay');
+        const thinkingOverlayEl = document.getElementById('thinkingOverlay');
+        
+        turnEl.textContent = 'CPUの番';
+        
+        // 思考開始：オーバーレイを表示
+        thinkingOverlayEl.classList.remove('hidden'); 
+
+        setTimeout(() => {
+            const bestMove = makeAIMove();
+            
+            // 処理後、オーバーレイを非表示に戻す
+            thinkingOverlayEl.classList.add('hidden');
+
+            if (bestMove) {
+                makeMove(bestMove.row, bestMove.col, bestMove.flips, 'white');
+            } else {
+                const backMoves = calculateValidMoves('black');
+                if (backMoves.length === 0) {
+                    endGame();
+                } else {
+                    currentPlayer = 'black';
+                    updateTurnDisplay();
+                }
+            }
+        }, 10); 
+    }
+
     function makeAIMove() {
       const config = AI_CONFIGS[difficulty];
       const moves = [];
@@ -693,44 +682,56 @@
         }
       }
 
-      if (moves.length === 0) {
-        showNoMovesMessage();
-        const backMoves = calculateValidMoves('black');
-        if (backMoves.length === 0) {
-          endGame();
-        } else {
-          currentPlayer = 'black';
-          updateTurnDisplay();
-        }
-        return;
-      }
+      if (moves.length === 0) return null;
 
       let bestMove;
+      let actualDepth = config.depth; // レベル12で8
+
+      // ★新規ロジック: 空きマスをカウント
+      let emptyCells = 0;
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+          if (board[i][j] === null) {
+            emptyCells++;
+          }
+        }
+      }
+
+      // ★新規ロジック: レベル12かつ中盤（空きマス20超）なら深さを一つ減らす
+      if (difficulty === 'level12' && emptyCells > 20) {
+          actualDepth = 7; // 8 ply -> 7 ply search total
+          console.log(`Level 12: Mid-game detected (Empty: ${emptyCells}). Reducing depth to ${actualDepth} (7 ply).`);
+      } else if (difficulty === 'level12' && emptyCells <= 20) {
+          console.log(`Level 12: End-game detected (Empty: ${emptyCells}). Maintaining depth ${actualDepth} (8 ply).`);
+      }
+
 
       if (config.strategy === 'random') {
-        // レベル1: 完全ランダム
         bestMove = moves[Math.floor(Math.random() * moves.length)];
       } else if (config.strategy === 'max_flips') {
-        // レベル2: 獲得数優先
         bestMove = moves.reduce((best, move) => 
           move.flips.length > (best.flips ? best.flips.length : -1) ? move : best
         , moves[0]);
       } else if (config.strategy === 'simple_eval') {
-        // レベル3: 単純な盤面評価
         bestMove = moves.reduce((best, move) => {
           const testBoard = applyMoveToBoard(board, move.row, move.col, move.flips, 'white');
           const score = evaluateBoard(testBoard);
           return score > (best.score || -Infinity) ? { ...move, score } : best;
         }, {});
       } else if (config.strategy === 'minimax') {
-        // レベル4〜8: ミニマックス探索
         let maxScore = -Infinity;
         bestMove = moves[0];
+
+        moves.forEach(move => {
+            const newBoard = applyMoveToBoard(board, move.row, move.col, move.flips, 'white');
+            move.quickEval = evaluateBoardQuick(newBoard); 
+        });
+        moves.sort((a, b) => b.quickEval - a.quickEval);
         
         for (const move of moves) {
           const newBoard = applyMoveToBoard(board, move.row, move.col, move.flips, 'white');
-          // 探索深さ(depth - 1)でミニマックスを実行。AI(白)のスコアを最大化
-          const score = minimax(newBoard, config.depth - 1, false); 
+          // ★修正: actualDepth を使用
+          const score = minimax(newBoard, actualDepth - 1, false, -Infinity, Infinity); 
           
           if (score > maxScore) {
             maxScore = score;
@@ -738,13 +739,122 @@
           }
         }
       }
-
-      makeMove(bestMove.row, bestMove.col, bestMove.flips, 'white');
+      return bestMove;
     }
 
-    // --- AI Auxiliary Functions ---
+    function boardToHash(testBoard) {
+        return testBoard.map(row => row.map(cell => cell === null ? '.' : cell[0]).join('')).join('');
+    }
 
-    // 盤面をコピーし、一手打った後の新しい盤面を返す
+    function evaluateBoardQuick(testBoard) {
+        const baseWeights = [
+            [500, -20, 10, 5, 5, 10, -20, 500],
+            [-20, -50, -2, -2, -2, -2, -50, -20],
+            [10, -2, 5, 1, 1, 5, -2, 10],
+            [5, -2, 1, 0, 0, 1, -2, 5],
+            [5, -2, 1, 0, 0, 1, -2, 5],
+            [10, -2, 5, 1, 1, 5, -2, 10],
+            [-20, -50, -2, -2, -2, -2, -50, -20],
+            [500, -20, 10, 5, 5, 10, -20, 500]
+        ];
+
+        let score = 0;
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                if (testBoard[i][j] === 'white') {
+                    score += baseWeights[i][j];
+                } else if (testBoard[i][j] === 'black') {
+                    score -= baseWeights[i][j];
+                }
+            }
+        }
+        return score; 
+    }
+
+
+    function minimax(currentBoard, depth, isMaximizingPlayer, alpha = -Infinity, beta = Infinity) {
+      const player = isMaximizingPlayer ? 'white' : 'black';
+      const opponent = isMaximizingPlayer ? 'black' : 'white';
+
+      // トランスポジションテーブルのチェック
+      const boardHash = boardToHash(currentBoard);
+      const cacheKey = `${boardHash}-${depth}-${isMaximizingPlayer}`;
+      if (transpositionTable.has(cacheKey)) {
+        return transpositionTable.get(cacheKey);
+      }
+
+      if (depth === 0) {
+        const score = evaluateBoard(currentBoard);
+        if (transpositionTable.size < MAX_CACHE_SIZE) {
+          transpositionTable.set(cacheKey, score);
+        }
+        return score;
+      }
+      
+      const moves = calculateValidMovesAtDepth(currentBoard, player);
+
+      if (moves.length === 0) {
+        const opponentMovesExist = calculateValidMovesAtDepth(currentBoard, opponent).length > 0;
+        
+        if (!opponentMovesExist) {
+            let black = 0; let white = 0;
+            for(let i=0; i<8; i++) { for(let j=0; j<8; j++) { 
+                if (currentBoard[i][j] === 'black') black++;
+                if (currentBoard[i][j] === 'white') white++;
+            }}
+            return (white - black) * 100000; 
+        }
+
+        return minimax(currentBoard, depth, !isMaximizingPlayer, alpha, beta);
+      }
+
+      // 手を簡易評価値でソート
+      moves.forEach(move => {
+        const newBoard = applyMoveToBoard(currentBoard, move.row, move.col, move.flips, player);
+        move.quickEval = evaluateBoardQuick(newBoard);
+      });
+      
+      if (isMaximizingPlayer) {
+        moves.sort((a, b) => b.quickEval - a.quickEval);
+      } else {
+        moves.sort((a, b) => a.quickEval - b.quickEval);
+      }
+
+      if (isMaximizingPlayer) {
+        let maxScore = -Infinity;
+        for (const move of moves) {
+          const newBoard = applyMoveToBoard(currentBoard, move.row, move.col, move.flips, player);
+          const score = minimax(newBoard, depth - 1, false, alpha, beta);
+          maxScore = Math.max(maxScore, score);
+          
+          alpha = Math.max(alpha, maxScore);
+          if (beta <= alpha) {
+            break; 
+          }
+        }
+        if (transpositionTable.size < MAX_CACHE_SIZE) {
+          transpositionTable.set(cacheKey, maxScore);
+        }
+        return maxScore;
+      } else {
+        let minScore = Infinity;
+        for (const move of moves) {
+          const newBoard = applyMoveToBoard(currentBoard, move.row, move.col, move.flips, player);
+          const score = minimax(newBoard, depth - 1, true, alpha, beta);
+          minScore = Math.min(minScore, score);
+          
+          beta = Math.min(beta, minScore);
+          if (beta <= alpha) {
+            break; 
+          }
+        }
+        if (transpositionTable.size < MAX_CACHE_SIZE) {
+          transpositionTable.set(cacheKey, minScore);
+        }
+        return minScore;
+      }
+    }
+
     function applyMoveToBoard(currentBoard, row, col, flips, player) {
       const newBoard = currentBoard.map(r => [...r]);
       newBoard[row][col] = player;
@@ -754,7 +864,6 @@
       return newBoard;
     }
 
-    // ミニマックス用: board変数ではなく、引数で渡された盤面 (testBoard) を評価するための isValidMove
     function isValidMoveAtDepth(testBoard, row, col, player) {
       if (testBoard[row][col] !== null) return [];
       
@@ -782,103 +891,148 @@
       return toFlip;
     }
 
-    // ミニマックスアルゴリズムの実装
-    function minimax(currentBoard, depth, isMaximizingPlayer) {
-      const player = isMaximizingPlayer ? 'white' : 'black';
-      const opponent = isMaximizingPlayer ? 'black' : 'white';
-
-      if (depth === 0) {
-        // 終端に達したら盤面を評価して返す
-        return evaluateBoard(currentBoard);
-      }
-      
-      const moves = [];
-      for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 8; j++) {
-          const toFlip = isValidMoveAtDepth(currentBoard, i, j, player);
-          if (toFlip.length > 0) {
-            moves.push({ row: i, col: j, flips: toFlip });
-          }
-        }
-      }
-
-      if (moves.length === 0) {
-        // パスの場合、相手プレイヤーの番として再帰 (ゲーム終了チェックは簡略化)
-        // 厳密には相手も打てないかチェックすべきだが、探索効率のため一旦スキップ
-        // 相手も打てない場合はゲーム終了として高評価/低評価を返す
-        const opponentMovesExist = calculateValidMovesAtDepth(currentBoard, opponent).length > 0;
-        
-        if (!opponentMovesExist) {
-            // 両者パスでゲーム終了。石の差を大きく評価
-            let black = 0; let white = 0;
-            for(let i=0; i<8; i++) { for(let j=0; j<8; j++) { 
-                if (currentBoard[i][j] === 'black') black++;
-                if (currentBoard[i][j] === 'white') white++;
-            }}
-            // AI(白)のスコア = 白石の数 - 黒石の数
-            return (white - black) * 10000; 
-        }
-
-        // パスして相手にターンを渡す
-        return minimax(currentBoard, depth, !isMaximizingPlayer);
-      }
-
-      if (isMaximizingPlayer) {
-        // AI(白)の番: スコアを最大化
-        let maxScore = -Infinity;
-        for (const move of moves) {
-          const newBoard = applyMoveToBoard(currentBoard, move.row, move.col, move.flips, player);
-          const score = minimax(newBoard, depth - 1, false);
-          maxScore = Math.max(maxScore, score);
-        }
-        return maxScore;
-      } else {
-        // プレイヤー(黒)の番: スコアを最小化
-        let minScore = Infinity;
-        for (const move of moves) {
-          const newBoard = applyMoveToBoard(currentBoard, move.row, move.col, move.flips, player);
-          const score = minimax(newBoard, depth - 1, true);
-          minScore = Math.min(minScore, score);
-        }
-        return minScore;
-      }
-    }
-
-    // ミニマックス用: 特定の盤面における有効な手のリストを取得
     function calculateValidMovesAtDepth(testBoard, player) {
         const moves = [];
         for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
-                if (testBoard[i][j] === null && isValidMoveAtDepth(testBoard, i, j, player).length > 0) {
-                    moves.push([i, j]);
+                const flips = isValidMoveAtDepth(testBoard, i, j, player);
+                if (testBoard[i][j] === null && flips.length > 0) {
+                    moves.push({ row: i, col: j, flips: flips });
                 }
             }
         }
         return moves;
     }
 
+    function calculateFronterStonesAtDepth(testBoard, player) {
+        let fronterCount = 0;
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                if (testBoard[i][j] === player) {
+                    for (const dir of directions) {
+                        const ni = i + dir[0];
+                        const nj = j + dir[1];
+                        if (ni >= 0 && ni < 8 && nj >= 0 && nj < 8 && testBoard[ni][nj] === null) {
+                            fronterCount++;
+                            break; 
+                        }
+                    }
+                }
+            }
+        }
+        return fronterCount;
+    }
+
+    function isStable(testBoard, row, col, player) {
+        if (testBoard[row][col] !== player) return false;
+        
+        const corners = [[0, 0], [0, 7], [7, 0], [7, 7]];
+        const isCorner = corners.some(c => c[0] === row && c[1] === col);
+
+        if (isCorner) {
+            let stableCount = 0;
+            const checks = [
+                [0, 1], [0, -1],
+                [1, 0], [-1, 0]
+            ];
+            
+            for (const [dr, dc] of checks) {
+                let r = row + dr, c = col + dc;
+                let isLineStable = true;
+                while (r >= 0 && r < 8 && c >= 0 && c < 8) {
+                    if (testBoard[r][c] !== player) {
+                        isLineStable = false;
+                        break;
+                    }
+                    r += dr;
+                    c += dc;
+                }
+                if (isLineStable) stableCount++;
+            }
+            return stableCount >= 2;
+        }
+        return false;
+    }
 
     function evaluateBoard(testBoard) {
-      // 盤面の角や辺に重み付けをする
-      const weights = [
-        [100, -20, 10, 5, 5, 10, -20, 100],
+      let baseWeights = [
+        [500, -20, 10, 5, 5, 10, -20, 500],
         [-20, -50, -2, -2, -2, -2, -50, -20],
         [10, -2, 5, 1, 1, 5, -2, 10],
         [5, -2, 1, 0, 0, 1, -2, 5],
         [5, -2, 1, 0, 0, 1, -2, 5],
         [10, -2, 5, 1, 1, 5, -2, 10],
         [-20, -50, -2, -2, -2, -2, -50, -20],
-        [100, -20, 10, 5, 5, 10, -20, 100]
+        [500, -20, 10, 5, 5, 10, -20, 500]
       ];
+      
+      const level = difficulty;
+      let finalWeights = baseWeights.map(arr => [...arr]); 
+
+      if (level === 'level11' || level === 'level12') {
+          const penalty = level === 'level12' ? -200 : -100;
+          
+          finalWeights[1][2] += penalty; finalWeights[1][5] += penalty;
+          finalWeights[6][2] += penalty; finalWeights[6][5] += penalty;
+
+          finalWeights[0][1] += penalty * 0.5; finalWeights[1][0] += penalty * 0.5;
+          finalWeights[0][6] += penalty * 0.5; finalWeights[1][7] += penalty * 0.5;
+          finalWeights[7][1] += penalty * 0.5; finalWeights[6][0] += penalty * 0.5;
+          finalWeights[7][6] += penalty * 0.5; finalWeights[6][7] += penalty * 0.5;
+      }
 
       let score = 0;
+      let emptyCells = 0;
+      let whiteCount = 0;
+      let blackCount = 0;
+      let whiteStable = 0;
+      let blackStable = 0;
+
       for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
-          // AI(白)を最大化プレイヤーとしてスコアを計算
-          if (testBoard[i][j] === 'white') score += weights[i][j];
-          if (testBoard[i][j] === 'black') score -= weights[i][j];
+          if (testBoard[i][j] === 'white') {
+            score += finalWeights[i][j];
+            whiteCount++;
+            if (isStable(testBoard, i, j, 'white')) whiteStable++;
+          } else if (testBoard[i][j] === 'black') {
+            score -= finalWeights[i][j];
+            blackCount++;
+            if (isStable(testBoard, i, j, 'black')) blackStable++;
+          } else {
+            emptyCells++;
+          }
         }
       }
+      
+      const whiteMoves = calculateValidMovesAtDepth(testBoard, 'white').length;
+      const blackMoves = calculateValidMovesAtDepth(testBoard, 'black').length;
+
+      const mobilityWeight = (level === 'level12') ? 100 : 50; 
+      const mobilityScore = (whiteMoves - blackMoves) * mobilityWeight;
+      score += mobilityScore;
+      
+      const stableWeight = (level === 'level12') ? 2000 : 1000;
+      const stableScore = (whiteStable - blackStable) * stableWeight;
+      score += stableScore;
+
+      if (level === 'level9' || level === 'level10' || level === 'level11' || level === 'level12') {
+          const whiteFronter = calculateFronterStonesAtDepth(testBoard, 'white');
+          const blackFronter = calculateFronterStonesAtDepth(testBoard, 'black');
+          
+          let fronterWeight = 100;
+          if (level === 'level10' || level === 'level11') fronterWeight = 200;
+          if (level === 'level12') fronterWeight = 500;
+
+          const fronterScore = (blackFronter - whiteFronter) * fronterWeight;
+          score += fronterScore;
+      }
+
+      if (emptyCells <= 10) {
+        const finalWeight = (level === 'level12') ? 10000 : 5000; 
+        const diff = whiteCount - blackCount;
+        score += diff * finalWeight;
+      }
+      
       return score;
     }
 
@@ -901,23 +1055,24 @@
 
     function updateTurnDisplay() {
       const turnEl = document.getElementById('turnDisplay');
+      document.getElementById('thinkingOverlay').classList.add('hidden'); 
       turnEl.textContent = currentPlayer === 'black' ? 'あなたの番' : 'CPUの番';
       renderBoard();
     }
 
-    // --- End Game Logic (勝利メッセージ追加) ---
     function endGame() {
       gameOver = true;
       const black = parseInt(document.getElementById('blackScore').textContent);
       const white = parseInt(document.getElementById('whiteScore').textContent);
       
       const turnEl = document.getElementById('turnDisplay');
+      document.getElementById('thinkingOverlay').classList.add('hidden');
+      
       turnEl.textContent = 'ゲーム終了！';
       turnEl.classList.add('game-over');
       
       const winnerEl = document.getElementById('winnerDisplay');
       if (black > white) {
-        // プレイヤー(黒)が勝利した場合のメッセージ
         winnerEl.textContent = '🎉 おめでとうございます！あなたの勝ちです！';
       } else if (white > black) {
         winnerEl.textContent = '💫 CPUの勝ちです！';
