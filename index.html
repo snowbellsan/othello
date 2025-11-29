@@ -296,6 +296,42 @@
       display: none !important;
     }
 
+    /* --- 置くところがありませんオーバーレイ (修正・追加) --- */
+    #noMovesOverlay {
+        position: fixed; /* 画面全体を覆う */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7); /* 半透明の背景 */
+        z-index: 1001; /* 思考中オーバーレイより前面 */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 0.3s ease;
+    }
+
+    .no-moves-message {
+        background: linear-gradient(145deg, #ffeb3b, #fbc02d);
+        color: #333;
+        padding: 30px 50px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        text-align: center;
+        font-size: 1.8em;
+        font-weight: bold;
+        line-height: 1.5;
+        animation: bounceIn 0.5s ease-out;
+        cursor: pointer; /* タップ可能であることを示す */
+    }
+
+    @keyframes bounceIn {
+        0% { transform: scale(0.5); opacity: 0; }
+        80% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(1); }
+    }
+    /* ----------------------------------------------------- */
+
     /* --- 思考中オーバーレイ --- */
     #thinkingOverlay {
         position: fixed;
@@ -474,7 +510,10 @@
     });
 
     document.getElementById('noMovesOverlay').addEventListener('click', function() {
+      // タップ/クリックでオーバーレイを非表示にする
       this.classList.add('hidden');
+      
+      // パス後の処理（CPUの手番に戻るなど）はmakeMove内で制御されているため、ここでは非表示にするだけでOK
     });
 
     function initBoard() {
@@ -631,7 +670,8 @@
             currentPlayer = player;
             updateTurnDisplay();
             if (currentPlayer === 'white') {
-              setTimeout(() => makeAIMoveAsync(), 1500);
+              // オーバーレイがクリックで消えた後にCPUの手番が来るようにするため、1500msではなく短めに設定
+              setTimeout(() => makeAIMoveAsync(), 500); 
             }
           }
         } else {
@@ -664,10 +704,13 @@
             if (bestMove) {
                 makeMove(bestMove.row, bestMove.col, bestMove.flips, 'white');
             } else {
+                // CPUが置ける場所がない場合
+                showNoMovesMessage(); 
                 const backMoves = calculateValidMoves('black');
                 if (backMoves.length === 0) {
                     endGame();
                 } else {
+                    // プレイヤーにパスバック
                     currentPlayer = 'black';
                     updateTurnDisplay();
                 }
